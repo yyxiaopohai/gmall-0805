@@ -3,13 +3,12 @@ package com.atguigu.gmall.pms.service.impl;
 import com.atguigu.gmall.pms.dao.*;
 import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.feign.GmallSmsClientFeign;
-import com.atguigu.gmall.pms.service.ProductAttrValueService;
-import com.atguigu.gmall.pms.service.SkuImagesService;
-import com.atguigu.gmall.pms.service.SkuSaleAttrValueService;
+import com.atguigu.gmall.pms.service.*;
 import com.atguigu.gmall.pms.vo.BaseAttrValueVO;
 import com.atguigu.gmall.pms.vo.SkuInfoVO;
 import com.atguigu.gmall.pms.vo.SpuInfoVO;
 import com.atguigu.sms.vo.SaleVO;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,8 @@ import com.atguigu.core.bean.PageVo;
 import com.atguigu.core.bean.Query;
 import com.atguigu.core.bean.QueryCondition;
 
-import com.atguigu.gmall.pms.service.SpuInfoService;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -46,6 +46,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     private SkuImagesService skuImagesService;
     @Resource
     private SkuSaleAttrValueService saleAttrValueService;
+    @Resource
+    private SpuInfoDescService descService;
     @Override
     public PageVo queryPage(QueryCondition params) {
         IPage<SpuInfoEntity> page = this.page(
@@ -71,39 +73,28 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageVo(page);
     }
 
+    @GlobalTransactional
     @Override
     public void bigSave(SpuInfoVO spuInfoVO) {
 
         // TODO: 2020/1/4 这里是保存共9张表的信息
         //1.保存spu信息
         //1.1保存spuInfo
-        spuInfoVO.setCreateTime(new Date());
-        spuInfoVO.setUodateTime(spuInfoVO.getCreateTime());
-        this.save(spuInfoVO);
-        Long spuId = spuInfoVO.getId();
+        Long spuId = saveSpuInfo(spuInfoVO);
         //1.2保存spudesc信息
-        List<String> spuImages = spuInfoVO.getSpuImages();
-        if (!CollectionUtils.isEmpty(spuImages)){
-            SpuInfoDescEntity descEntity = new SpuInfoDescEntity();
-            descEntity.setSpuId(spuId);
-            descEntity.setDecript(StringUtils.join(spuImages,","));
-            descDao.insert(descEntity);
-        }
+        descService.saveSpuDesc(spuInfoVO, spuId);
         //1.3保存基础属性相关信息ProductAttr
-        List<BaseAttrValueVO> baseAttrs = spuInfoVO.getBaseAttrs();
-        if (!CollectionUtils.isEmpty(baseAttrs)){
-            List<ProductAttrValueEntity> attrValueEntuties = baseAttrs.stream().map(baseAttr -> {
-                ProductAttrValueEntity attrValueEntity = new ProductAttrValueEntity();
-                BeanUtils.copyProperties(baseAttr, attrValueEntity);
-                attrValueEntity.setSpuId(spuId);
-                attrValueEntity.setAttrSort(0);
-                attrValueEntity.setQuickShow(0);
-                return attrValueEntity;
-            }).collect(Collectors.toList());
-            attrValueService.saveBatch(attrValueEntuties);
-        }
+        saceBaseAttrValue(spuInfoVO, spuId);
 
         //2.保存skuInfo信息
+        saveSkuAndSales(spuInfoVO, spuId);
+
+        //事务演示
+//        int a = 2/0;
+    }
+
+
+    private void saveSkuAndSales(SpuInfoVO spuInfoVO, Long spuId) {
         List<SkuInfoVO> skus = spuInfoVO.getSkus();
         if (CollectionUtils.isEmpty(skus)){
             return;
@@ -151,7 +142,28 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             saleVO.setSkuId(skuId);
             smsClientFeign.saveSales(saleVO);
         });
+    }
 
+    private void saceBaseAttrValue(SpuInfoVO spuInfoVO, Long spuId) {
+        List<BaseAttrValueVO> baseAttrs = spuInfoVO.getBaseAttrs();
+        if (!CollectionUtils.isEmpty(baseAttrs)){
+            List<ProductAttrValueEntity> attrValueEntuties = baseAttrs.stream().map(baseAttr -> {
+                ProductAttrValueEntity attrValueEntity = new ProductAttrValueEntity();
+                BeanUtils.copyProperties(baseAttr, attrValueEntity);
+                attrValueEntity.setSpuId(spuId);
+                attrValueEntity.setAttrSort(0);
+                attrValueEntity.setQuickShow(0);
+                return attrValueEntity;
+            }).collect(Collectors.toList());
+            attrValueService.saveBatch(attrValueEntuties);
+        }
+    }
+
+    private Long saveSpuInfo(SpuInfoVO spuInfoVO) {
+        spuInfoVO.setCreateTime(new Date());
+        spuInfoVO.setUodateTime(spuInfoVO.getCreateTime());
+        this.save(spuInfoVO);
+        return spuInfoVO.getId();
     }
 
 }
