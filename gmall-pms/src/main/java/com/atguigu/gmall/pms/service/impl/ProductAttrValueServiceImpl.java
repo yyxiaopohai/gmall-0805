@@ -1,6 +1,9 @@
 package com.atguigu.gmall.pms.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -13,10 +16,14 @@ import com.atguigu.gmall.pms.dao.ProductAttrValueDao;
 import com.atguigu.gmall.pms.entity.ProductAttrValueEntity;
 import com.atguigu.gmall.pms.service.ProductAttrValueService;
 
+import javax.annotation.Resource;
+
 
 @Service("productAttrValueService")
 public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao, ProductAttrValueEntity> implements ProductAttrValueService {
 
+    @Resource
+    private ProductAttrValueDao productAttrValueDao;
     @Override
     public PageVo queryPage(QueryCondition params) {
         IPage<ProductAttrValueEntity> page = this.page(
@@ -25,6 +32,11 @@ public class ProductAttrValueServiceImpl extends ServiceImpl<ProductAttrValueDao
         );
 
         return new PageVo(page);
+    }
+
+    @Override
+    public List<ProductAttrValueEntity> querySearchAttrValue(Long spuId) {
+        return productAttrValueDao.querySearchAttrValue(spuId);
     }
 
 }
