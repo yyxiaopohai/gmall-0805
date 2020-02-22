@@ -39,7 +39,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     public List<CategoryEntity> queryCategory(Integer level, Long parentCid) {
         QueryWrapper<CategoryEntity> queryWrapper = new QueryWrapper<>();
         if (level != 0) {
-            queryWrapper.eq("cat_id",level);
+            queryWrapper.eq("cat_level",level);
         }
         if (parentCid != null) {
             queryWrapper.eq("parent_cid",parentCid);

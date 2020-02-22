@@ -7,7 +7,7 @@ spring:
         server-addr: 127.0.0.1:8848
   elasticsearch:
     rest:
-      uris: http://192.168.230.128
+      uris: http://192.168.230.128:9200
   jackson:
     default-property-inclusion: non_null
   rabbitmq:

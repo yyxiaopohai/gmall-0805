@@ -1,0 +1,29 @@
+server:
+  port: 8092
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 192.168.230.128
+    port: 6379
+  rabbitmq:
+    host: 192.168.230.128
+    port: 5672
+    virtual-host: /xiaozhang
+    username: xiaozhang
+    password: xiaozhang
+jwt:
+  token:
+    pubKeyPath: E:\javaSE0805\rsa\rsa.pub
+    cookieName: gmall-token
+    userKey: user-key
+    expireTime: 7776000
+alipay:
+  app_id: 2016101500692511
+  notify_url: http://udowd46wcq.52http.net/api/order/pay/success # 域名是哲西云提供的域名，路径是订单支付成功回调的路径
+  return_url: http://localhost:2000/pay/success.html
+  sign_type: RSA2
+  charset: utf-8
+  gatewayUrl: https://openapi.alipaydev.com/gateway.do

@@ -9,7 +9,7 @@ public class SearchParam {
 
     private String key;//搜索的数据
 
-    private Long[] catlog3;//三级分类的id
+    private Long[] catelog3;//三级分类的id
     private Long[] brand;//品牌id
 
     private Double priceFrom;//最低价格

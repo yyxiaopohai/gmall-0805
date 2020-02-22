@@ -31,4 +31,37 @@ public class IndexController {
         List<CategoryVo> categoryVos = indexService.queryCategoriesWithSub(pid);
         return Resp.ok(categoryVos);
     }
+
+    @GetMapping("test/lock")
+    public Resp<Object> lock(){
+        indexService.testLock();
+        return Resp.ok(null);
+    }
+
+
+    @GetMapping("read")
+    public Resp<String> read(){
+        String msg = indexService.testRead();
+        return Resp.ok(msg);
+    }
+
+
+    @GetMapping("write")
+    public Resp<String> write(){
+        String msg = indexService.testwrite();
+        return Resp.ok(msg);
+    }
+
+    @GetMapping("door")
+    public Resp<String> door(){
+        String msg = indexService.door();
+        return Resp.ok(msg);
+    }
+
+
+    @GetMapping("down")
+    public Resp<String> down(){
+        String msg = indexService.down();
+        return Resp.ok(msg);
+    }
 }

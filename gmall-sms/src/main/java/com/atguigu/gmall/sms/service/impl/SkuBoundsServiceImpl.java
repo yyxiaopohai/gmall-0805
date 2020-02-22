@@ -4,10 +4,14 @@ import com.atguigu.gmall.sms.dao.SkuFullReductionDao;
 import com.atguigu.gmall.sms.dao.SkuLadderDao;
 import com.atguigu.gmall.sms.entity.SkuFullReductionEntity;
 import com.atguigu.gmall.sms.entity.SkuLadderEntity;
+import com.atguigu.sms.vo.ItemSaleVO;
 import com.atguigu.sms.vo.SaleVO;
+import io.seata.core.protocol.MergedWarpMessage;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -61,6 +65,40 @@ public class SkuBoundsServiceImpl extends ServiceImpl<SkuBoundsDao, SkuBoundsEnt
         BeanUtils.copyProperties(saleVO,skuFullReductionEntity);
         skuFullReductionEntity.setAddOther(saleVO.getFullAddOther());
         fullReductionDao.insert(skuFullReductionEntity);
+    }
+
+    @Override
+    public List<ItemSaleVO> queryItemSaleVOByskuId(Long skuId) {
+        List<ItemSaleVO> itemSaleVOS = new ArrayList<>();
+        //查询积分信息
+        SkuBoundsEntity skuBoundsEntity = this.getOne(new QueryWrapper<SkuBoundsEntity>().eq("sku_id", skuId));
+
+        if (skuBoundsEntity != null){
+            ItemSaleVO itemSaleVO = new ItemSaleVO();
+            itemSaleVO.setType("积分");
+            itemSaleVO.setDesc("赠送成长积分："+ skuBoundsEntity.getGrowBounds() +",购物积分："+skuBoundsEntity.getBuyBounds());
+
+            itemSaleVOS.add(itemSaleVO);
+        }
+        //查询满减信息
+        SkuLadderEntity ladderEntity = this.ladderDao.selectOne(new QueryWrapper<SkuLadderEntity>().eq("sku_id", skuId));
+        if (ladderEntity != null){
+            ItemSaleVO itemSaleVO = new ItemSaleVO();
+            itemSaleVO.setType("打折");
+            itemSaleVO.setDesc("满"+ ladderEntity.getFullCount() +"件，打"+ ladderEntity.getDiscount().divide(new BigDecimal(10)) +"折");
+            itemSaleVOS.add(itemSaleVO);
+        }
+
+        //查询打折信息
+        SkuFullReductionEntity skuFullReductionEntity = this.fullReductionDao.selectOne(new QueryWrapper<SkuFullReductionEntity>().eq("sku_id", skuId));
+        if (skuFullReductionEntity != null){
+            ItemSaleVO itemSaleVO = new ItemSaleVO();
+
+            itemSaleVO.setType("满减");
+            itemSaleVO.setDesc("满"+skuFullReductionEntity.getFullPrice()+"件，减"+skuFullReductionEntity.getReducePrice());
+            itemSaleVOS.add(itemSaleVO);
+        }
+        return itemSaleVOS;
     }
 
 }

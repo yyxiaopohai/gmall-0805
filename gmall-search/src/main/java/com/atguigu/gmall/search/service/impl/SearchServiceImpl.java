@@ -79,13 +79,12 @@ public class SearchServiceImpl implements SearchService {
 
         //解析品牌
         Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().asMap();
-        ParsedStringTerms attrIdAgg = (ParsedStringTerms)aggregationMap.get("attrIdAgg");
+        ParsedLongTerms attrIdAgg = (ParsedLongTerms)aggregationMap.get("brandIdAgg");
         SearchResponseAttrVO responseAttrVO = new SearchResponseAttrVO();
         responseAttrVO.setProductAttributeId(null);
         responseAttrVO.setName("品牌");
 
         //获取聚合中的桶
-            // TODO: 2020/1/12 这有null
         List<? extends Terms.Bucket> buckets = attrIdAgg.getBuckets();
         if (!CollectionUtils.isEmpty(buckets)){
 
@@ -94,7 +93,7 @@ public class SearchServiceImpl implements SearchService {
                 Map<String,Object> map = new HashMap<>();
                 map.put("id",((Terms.Bucket) bucket).getKeyAsNumber());
                 Map<String, Aggregation> stringAggregationMap = ((Terms.Bucket) bucket).getAggregations().asMap();
-                ParsedStringTerms attrNameAgg = (ParsedStringTerms)stringAggregationMap.get("attrNameAgg");
+                ParsedStringTerms attrNameAgg = (ParsedStringTerms)stringAggregationMap.get("brandNameAgg");
                 List<? extends Terms.Bucket> nameAggBuckets = attrNameAgg.getBuckets();
                 map.put("name",nameAggBuckets.get(0).getKeyAsString());
 
@@ -121,7 +120,7 @@ public class SearchServiceImpl implements SearchService {
                 Map<String, Aggregation> categoryAgg = ((Terms.Bucket) categoryBucket).getAggregations().asMap();
                 ParsedStringTerms categoryNameAgg = (ParsedStringTerms)categoryAgg.get("categoryNameAgg");
                 List<? extends Terms.Bucket> aggBuckets = categoryNameAgg.getBuckets();
-                map.put("name",aggBuckets.get(0).getKeyAsNumber());
+                map.put("name",aggBuckets.get(0).getKeyAsString());
                 return JSON.toJSONString(map);
             }).collect(Collectors.toList());
             categoryVO.setValue(categoryValues);
@@ -129,7 +128,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         //解析attr
-        ParsedNested attrsAgg = (ParsedNested)aggregationMap.get("attrsAgg");
+        ParsedNested attrsAgg = (ParsedNested)aggregationMap.get("attrAgg");
         ParsedLongTerms attrIdAggs = (ParsedLongTerms)attrsAgg.getAggregations().get("attrIdAgg");
         List<? extends Terms.Bucket> attrIdAggsBuckets = attrIdAggs.getBuckets();
         attrIdAggsBuckets.stream().map(attrIdAggsBucket -> {
@@ -169,7 +168,7 @@ public class SearchServiceImpl implements SearchService {
             boolQueryBuilder.filter(QueryBuilders.termsQuery("brandId",brandIds));
         }
         //1.2.2. 分类过滤
-        Long[] categoryIds = searchParam.getCatlog3();
+        Long[] categoryIds = searchParam.getCatelog3();
         if (categoryIds != null && categoryIds.length != 0){
             boolQueryBuilder.filter(QueryBuilders.termQuery("categoryId",categoryIds));
         }

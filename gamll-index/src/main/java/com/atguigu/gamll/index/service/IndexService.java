@@ -11,4 +11,14 @@ public interface IndexService {
     List<CategoryEntity> queryLvl1Categories();
 
     List<CategoryVo> queryCategoriesWithSub(Long pid);
+
+    void testLock();
+
+    String testRead();
+
+    String testwrite();
+
+    String door();
+
+    String down();
 }
